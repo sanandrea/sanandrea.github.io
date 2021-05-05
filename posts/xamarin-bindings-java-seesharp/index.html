@@ -6,6 +6,7 @@
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/syntax.css">
     
     <title>Andi Palo</title>
     <link rel="icon" type="image/png" href="/assets/img/favicon.ico" />
@@ -37,7 +38,7 @@
 <hr>
 <p>It has been exactly one year that I have been involved mobile application development with Xamarin and I would like to share an important experience that I have gained in this period. Xamarin is a powerful framework for cross-platform mobile application development which uses a modern and powerful language like C# but in the same time it offers access to the native Platform APIs and User Interface controls.</p>
 <p>Another key aspect of Xamarin Framework is the ability to use native libraries (native is a relative term and in the Xamarin world it means developed in Java or Obj-C/Swift). In case of Java jar libraries the usage is made possible by either creating a <em>Binding Library</em> or by direct access to the Java Native Interface aka JNI. The former is <strong>almost</strong> quite straightforward: you create a Binding Project and then Xamarin uses predefined templates to generate Managed Callable Wrappers (MCW) that interact with JNI. The MCWs encapsulate the JNI usage and hide the underlying complexity. Also the MCWs enable Java sub-classing and the possibility to provide C# implementation of Java interfaces.</p>
-<p><a href="http://www.andipalo.com/wp-content/uploads/2017/06/architecture.png"><img src="../../../../uploads/2017/06/architecture.png" alt="Architecture"></a></p>
+<p><img src="/pics/architecture.png" alt="Architecture"></p>
 <h5 id="image-credits-xamarinhttpsdeveloperxamarincomguidesandroidadvanced_topicsbinding-a-java-libraryoverview">Image credits <a href="https://developer.xamarin.com/guides/android/advanced_topics/binding-a-java-library/#Overview">Xamarin</a></h5>
 <p>On the other hand, working directly with JNI does not have any practical limitation but the official <a href="https://developer.xamarin.com/guides/android/advanced_topics/java_integration_overview/working_with_jni/">Xamarin Guide</a> for JNI Bindings ends with the dramatic 😱 summary:</p>
 <blockquote>
@@ -46,32 +47,29 @@
 <p>So the automatic template generation for C# wrappers is the way to go, but it comes with one cost: <a href="https://developer.xamarin.com/guides/android/advanced_topics/limitations/"><em>the limitations</em></a>. In fact the MCWs are a convenient tool provided by Xamarin, but they have some limitations. The limitations and the complexity to put everything correctly in place makes the binding process require high volatility time estimation. I would like to define the overall experience of the binding process as <strong><!-- raw HTML omitted -->Infinite Improbability Drive<!-- raw HTML omitted --></strong>.</p>
 <h2 id="the-main-limitation">The main limitation</h2>
 <p>In this post I would like to cover one of the most annoying limitations: the lack of Java Generics Support. It is useful to stress out that this is not a limitation of the binding templates, but it is intrinsic to the Java Language. Generic Java types are erased at compile time so the automatic binding templates little can do to generate the correct types <code>Java.Lang.Object</code>-s it encounters in the jar library. The Java classes that extend/implement generic classes or interfaces cannot be bound by the automatic generated templates. For the curious ones the code generation framework can be browsed in the official <a href="https://github.com/xamarin/xamarin-android/tree/master/src/Mono.Android.Export">Github Xamarin.Android Repo</a>.</p>
-<p>So how to handle this situation<a href="#footnotes" title="Jump to Footnote"><!-- raw HTML omitted -->1<!-- raw HTML omitted --></a>? Again there is the risky JNI road but I will propose a simpler solution. I got this idea from <a href="https://bugzilla.xamarin.com/show_bug.cgi?id=19740">this Xamarin bugzilla post</a>. The author exposes an issue when trying to bind Generic Interfaces. See code snippet:</p>
-<pre><code>&lt;pre class=&quot;brush: java; title: ; notranslate&quot; title=&quot;&quot;&gt;
-public interface TopInterface&lt;T&gt; {
-    abstract public void onRun(T object);
-}
+<p>So how to handle this situation<sup id="fnref:1"><a href="#fn:1" class="footnote-ref" role="doc-noteref">1</a></sup>? Again there is the risky JNI road but I will propose a simpler solution. I got this idea from <a href="https://bugzilla.xamarin.com/show_bug.cgi?id=19740">this Xamarin bugzilla post</a>. The author exposes an issue when trying to bind Generic Interfaces. See code snippet:</p>
+<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">TopInterface</span><span class="o">&lt;</span><span class="n">T</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kd">abstract</span> <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onRun</span><span class="o">(</span><span class="n">T</span> <span class="n">object</span><span class="o">);</span>
+<span class="o">}</span>
 
-public interface SecondInterface extends TopInterface&lt;StringContainer&gt; {
-}
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">SecondInterface</span> <span class="kd">extends</span> <span class="n">TopInterface</span><span class="o">&lt;</span><span class="n">StringContainer</span><span class="o">&gt;</span> <span class="o">{</span>
+<span class="o">}</span>
 
-public class StringContainer extends java.lang.Object {
-    public String contents;
-}
-</code></pre><p>The problem is that the MCW for <code>ITopInterface</code> is not Generic! If one tries to use the <code>ISecondInterface</code> binding from a Xamarin.Android app:</p>
-<pre><code>&lt;pre class=&quot;brush: csharp; title: ; notranslate&quot; title=&quot;&quot;&gt;
-public class ImplementsSecondInterface : Java.Lang.Object, ISecondInterface
-{
-    public void OnRun(StringContainer container)
-        {
-            container.Contents = &quot;Hello, World!&quot;;
-        }
-    }
-}
-</code></pre><p>the compilation error arises:</p>
-<pre><code>&lt;pre class=&quot;brush: bash; title: ; notranslate&quot; title=&quot;&quot;&gt;
-Error:  testapp.ImplementsSecondInterface is not abstract and does not override abstract method onRun(com.example.testandroidlib.StringContainer) in com.example.testandroidlib.TopInterface
-</code></pre><p>The author suggestion for this limitation is to:</p>
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">StringContainer</span> <span class="kd">extends</span> <span class="n">java</span><span class="o">.</span><span class="na">lang</span><span class="o">.</span><span class="na">Object</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="n">String</span> <span class="n">contents</span><span class="o">;</span>
+<span class="o">}</span>
+</code></pre></div><p>The problem is that the MCW for <code>ITopInterface</code> is not Generic! If one tries to use the <code>ISecondInterface</code> binding from a Xamarin.Android app:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">class</span> <span class="nc">ImplementsSecondInterface</span> <span class="p">:</span> <span class="n">Java</span><span class="p">.</span><span class="n">Lang</span><span class="p">.</span><span class="n">Object</span><span class="p">,</span> <span class="n">ISecondInterface</span>
+<span class="p">{</span>
+    <span class="k">public</span> <span class="k">void</span> <span class="n">OnRun</span><span class="p">(</span><span class="n">StringContainer</span> <span class="n">container</span><span class="p">)</span>
+        <span class="p">{</span>
+            <span class="n">container</span><span class="p">.</span><span class="n">Contents</span> <span class="p">=</span> <span class="s">&#34;Hello, World!&#34;</span><span class="p">;</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p>the compilation error arises:</p>
+<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">Error:  testapp.ImplementsSecondInterface is not abstract and does not override abstract method onRun<span class="o">(</span>com.example.testandroidlib.StringContainer<span class="o">)</span> in com.example.testandroidlib.TopInterface
+</code></pre></div><p>The author suggestion for this limitation is to:</p>
 <ol>
 <li>Bind the jar as normal, it will not compile but will generate the temporary files,</li>
 <li>Hand-edit the generated MCW files (<code>ITopinterface, ISecondInterface, Consumer</code>) by adding generics to the erased types,</li>
@@ -86,141 +84,134 @@ Error:  testapp.ImplementsSecondInterface is not abstract and does not override 
 </ol>
 <p>Although it may seem pretty straightforward step 2 and 7 are quite cumbersome for most of the developers who do not want to spend time learning the JNI interactions. Moreover this simple case does not represent all real world scenarios where generics types are entangled with other classes and interfaces. Thus, maintaining that code might not be an easy task as the amount of knowledge to be transferred to other members of the team is huge.</p>
 <p>The idea that my <a href="#contributors" title="Jump to Contributors">team</a> and I came up with, is to create a <code>thin</code> wrapper <strong>in Java</strong> for the Interfaces and Classes that use generics and completely hide the Generics by exposing a new API. This new Java library will contain all possible combinations that would derive from the Generic types, because each of them will explode to a corresponding dedicated type. In my opinion the resulting Java Wrapper library is more maintainable than the manually edited MCW/ACW and this blog post aims at minimising the amount of code used to wrap the original library. To support my thesis I have created a demo Java library which exposes Generics in its API. One can find the Java library source code <a href="https://github.com/sanandrea/TestDroidAppEvents">here</a>. It is the poor man’s <code>Event Bus Architecture Pattern</code> but it is only for demonstration purposes. The overall library architecture is described in the following UML diagram (I hate it but it was the easiest way by using <a href="https://plugins.jetbrains.com/plugin/4946-simpleumlce">SimpleUML</a> Android Studio Plugin). The classes/interfaces with a red asterisk contain generic types.</p>
-<p><a href="http://www.andipalo.com/wp-content/uploads/2017/07/lib_structure.png"><img src="http://www.andipalo.com/wp-content/uploads/2017/07/lib_structure.png" alt=""></a></p>
+<p><img src="/pics/lib_structure.png" alt="Lib Structure"></p>
 <p>Now the main class here <code>SimplePlayer</code> is quite simple, but in a normal scenario it might have too many dependencies. In order to use it, one has to register to certain <code>Events</code> and implement the callback for when the event is raised. The <code>EventDispatcher</code> interface defines a Generic method to register to certain types of events. For the sake of simplicity, I have added two types of Events <code>MediaLoadEvent</code> and <code>MediaUnloadEvent</code> both of which inherit from the abstract class <code>PlayerEvent</code>.</p>
-<pre><code>&lt;pre class=&quot;brush: java; title: ; notranslate&quot; title=&quot;&quot;&gt;
-public abstract class PlayerEvent&lt;H&gt; {
-    public abstract void dispatch(H paramH);
+<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">abstract</span> <span class="kd">class</span> <span class="nc">PlayerEvent</span><span class="o">&lt;</span><span class="n">H</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kd">abstract</span> <span class="kt">void</span> <span class="nf">dispatch</span><span class="o">(</span><span class="n">H</span> <span class="n">paramH</span><span class="o">);</span>
 
-    public abstract PlayerEvent.Type&lt;H&gt; getType();
+    <span class="kd">public</span> <span class="kd">abstract</span> <span class="n">PlayerEvent</span><span class="o">.</span><span class="na">Type</span><span class="o">&lt;</span><span class="n">H</span><span class="o">&gt;</span> <span class="nf">getType</span><span class="o">();</span>
 
-    public static class Type&lt;H&gt; {
-        private final String eType;
-        public Type(String eType){this.eType = eType;}
-        public String toString(){return eType;}
-    }
-}
+    <span class="kd">public</span> <span class="kd">static</span> <span class="kd">class</span> <span class="nc">Type</span><span class="o">&lt;</span><span class="n">H</span><span class="o">&gt;</span> <span class="o">{</span>
+        <span class="kd">private</span> <span class="kd">final</span> <span class="n">String</span> <span class="n">eType</span><span class="o">;</span>
+        <span class="kd">public</span> <span class="nf">Type</span><span class="o">(</span><span class="n">String</span> <span class="n">eType</span><span class="o">){</span><span class="k">this</span><span class="o">.</span><span class="na">eType</span> <span class="o">=</span> <span class="n">eType</span><span class="o">;}</span>
+        <span class="kd">public</span> <span class="n">String</span> <span class="nf">toString</span><span class="o">(){</span><span class="k">return</span> <span class="n">eType</span><span class="o">;}</span>
+    <span class="o">}</span>
+<span class="o">}</span>
 
-public class MediaLoadEvent extends PlayerEvent&lt;PlayerEventListener&lt;MediaLoadEvent&gt;&gt; {
-    private final int value;
-    public int getValue(){return value;}
+<span class="kd">public</span> <span class="kd">class</span> <span class="nc">MediaLoadEvent</span> <span class="kd">extends</span> <span class="n">PlayerEvent</span><span class="o">&lt;</span><span class="n">PlayerEventListener</span><span class="o">&lt;</span><span class="n">MediaLoadEvent</span><span class="o">&gt;&gt;</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="kd">final</span> <span class="kt">int</span> <span class="n">value</span><span class="o">;</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getValue</span><span class="o">(){</span><span class="k">return</span> <span class="n">value</span><span class="o">;}</span>
 
-    public MediaLoadEvent(int value){this.value = value;}   
+    <span class="kd">public</span> <span class="nf">MediaLoadEvent</span><span class="o">(</span><span class="kt">int</span> <span class="n">value</span><span class="o">){</span><span class="k">this</span><span class="o">.</span><span class="na">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">;}</span>   
 
-    static PlayerEvent.Type&lt;PlayerEventListener&lt;MediaLoadEvent&gt;&gt; TYPE = new PlayerEvent.Type(&quot;LoadEvent&quot;);
+    <span class="kd">static</span> <span class="n">PlayerEvent</span><span class="o">.</span><span class="na">Type</span><span class="o">&lt;</span><span class="n">PlayerEventListener</span><span class="o">&lt;</span><span class="n">MediaLoadEvent</span><span class="o">&gt;&gt;</span> <span class="n">TYPE</span> <span class="o">=</span> <span class="k">new</span> <span class="n">PlayerEvent</span><span class="o">.</span><span class="na">Type</span><span class="o">(</span><span class="s">&#34;LoadEvent&#34;</span><span class="o">);</span>
 
-    public static PlayerEvent.Type&lt;PlayerEventListener&lt;MediaLoadEvent&gt;&gt; getAssociatedType(){
-        return TYPE;
-    }
-    public PlayerEvent.Type&lt;PlayerEventListener&lt;MediaLoadEvent&gt;&gt; getType(){
-        return TYPE;
-    }
-    public void dispatch(PlayerEventListener&lt;MediaLoadEvent&gt; listener){
-        listener.onPlayerEvent(this);
-    }
-}
-</code></pre><p>Now the fact that the various <code>Events</code> are subclasses of <code>PlayerEvent</code> gives an advantage on the elegant definition of the <code>PlayerEventListener</code> interface which allows the client code to listen to only the necessary <code>Events</code> that are needed. Unfortunately both of these interfaces cannot be bound automatically.</p>
-<pre><code>&lt;pre class=&quot;brush: java; title: ; notranslate&quot; title=&quot;&quot;&gt;
-public interface PlayerEventListener&lt;E extends PlayerEvent&gt; {
-    public void onPlayerEvent(E param);
-}
+    <span class="kd">public</span> <span class="kd">static</span> <span class="n">PlayerEvent</span><span class="o">.</span><span class="na">Type</span><span class="o">&lt;</span><span class="n">PlayerEventListener</span><span class="o">&lt;</span><span class="n">MediaLoadEvent</span><span class="o">&gt;&gt;</span> <span class="nf">getAssociatedType</span><span class="o">(){</span>
+        <span class="k">return</span> <span class="n">TYPE</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="kd">public</span> <span class="n">PlayerEvent</span><span class="o">.</span><span class="na">Type</span><span class="o">&lt;</span><span class="n">PlayerEventListener</span><span class="o">&lt;</span><span class="n">MediaLoadEvent</span><span class="o">&gt;&gt;</span> <span class="nf">getType</span><span class="o">(){</span>
+        <span class="k">return</span> <span class="n">TYPE</span><span class="o">;</span>
+    <span class="o">}</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">dispatch</span><span class="o">(</span><span class="n">PlayerEventListener</span><span class="o">&lt;</span><span class="n">MediaLoadEvent</span><span class="o">&gt;</span> <span class="n">listener</span><span class="o">){</span>
+        <span class="n">listener</span><span class="o">.</span><span class="na">onPlayerEvent</span><span class="o">(</span><span class="k">this</span><span class="o">);</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div><p>Now the fact that the various <code>Events</code> are subclasses of <code>PlayerEvent</code> gives an advantage on the elegant definition of the <code>PlayerEventListener</code> interface which allows the client code to listen to only the necessary <code>Events</code> that are needed. Unfortunately both of these interfaces cannot be bound automatically.</p>
+<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">PlayerEventListener</span><span class="o">&lt;</span><span class="n">E</span> <span class="kd">extends</span> <span class="n">PlayerEvent</span><span class="o">&gt;</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">void</span> <span class="nf">onPlayerEvent</span><span class="o">(</span><span class="n">E</span> <span class="n">param</span><span class="o">);</span>
+<span class="o">}</span>
 
-public interface EventDispatcher {
-    //H is PlayerEventListener&lt;E extends PlayerEvent&gt;
-    &lt;H&gt; ListenerRegistration addEventListener(PlayerEvent.Type&lt;H&gt; type, H handler); 
-}
-</code></pre><p>Putting the jar directly to a binding project will fail with the following problems due to the type erasure explained above:</p>
-<pre><code>&lt;pre class=&quot;brush: bash; title: ; notranslate&quot; title=&quot;&quot;&gt;
-.../Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent.cs(23,23): Error CS0534: 
-    `Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent' does not implement inherited abstract member 
-    `Com.Example.Awesomelibrary.AP.Events.PlayerEvent.RawType.get' (CS0534) (FailedBinding)
-.../Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent.cs(23,23): Error CS0534: 
-    `Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent' does not implement inherited abstract member 
-    `Com.Example.Awesomelibrary.AP.Events.PlayerEvent.Dispatch(Java.Lang.Object)' (CS0534) (FailedBinding)
-#the same for MediaUnloadEvent...
-</code></pre><h2 id="the-wrapping">The Wrapping</h2>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">EventDispatcher</span> <span class="o">{</span>
+    <span class="c1">//H is PlayerEventListener&lt;E extends PlayerEvent&gt;
+</span><span class="c1"></span>    <span class="o">&lt;</span><span class="n">H</span><span class="o">&gt;</span> <span class="n">ListenerRegistration</span> <span class="nf">addEventListener</span><span class="o">(</span><span class="n">PlayerEvent</span><span class="o">.</span><span class="na">Type</span><span class="o">&lt;</span><span class="n">H</span><span class="o">&gt;</span> <span class="n">type</span><span class="o">,</span> <span class="n">H</span> <span class="n">handler</span><span class="o">);</span> 
+<span class="o">}</span>
+</code></pre></div><p>Putting the jar directly to a binding project will fail with the following problems due to the type erasure explained above:</p>
+<div class="highlight"><pre class="chroma"><code class="language-bash" data-lang="bash">.../Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent.cs<span class="o">(</span>23,23<span class="o">)</span>: Error CS0534: 
+    <span class="sb">`</span>Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent<span class="s1">&#39; does not implement inherited abstract member 
+</span><span class="s1">    `Com.Example.Awesomelibrary.AP.Events.PlayerEvent.RawType.get&#39;</span> <span class="o">(</span>CS0534<span class="o">)</span> <span class="o">(</span>FailedBinding<span class="o">)</span>
+.../Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent.cs<span class="o">(</span>23,23<span class="o">)</span>: Error CS0534: 
+    <span class="sb">`</span>Com.Example.Awesomelibrary.AP.Events.Impl.MediaLoadEvent<span class="s1">&#39; does not implement inherited abstract member 
+</span><span class="s1">    `Com.Example.Awesomelibrary.AP.Events.PlayerEvent.Dispatch(Java.Lang.Object)&#39;</span> <span class="o">(</span>CS0534<span class="o">)</span> <span class="o">(</span>FailedBinding<span class="o">)</span>
+<span class="c1">#the same for MediaUnloadEvent...</span>
+</code></pre></div><h2 id="the-wrapping">The Wrapping</h2>
 <p>The first step is to identify the classes and interfaces that needs to be edited. Afterwards we have to masquerade the generics types on the wrapper library by wrapping each <code>Class</code> on a new dedicated type called <code>WrapperType</code>. This can be obtained by placing the original class as a private field in the wrapper class. The creator of the private field might be the wrapper class itself in most of the cases by providing a constructor with same parameters in the wrapper class. Or, if the wrapped class cannot be created by client code, the wrapper might expose a constructor with the wrapped class. This constructor will not be bound in C# code and will be used only in the thin library. See two examples below:</p>
-<pre><code>&lt;pre class=&quot;brush: java; title: ; notranslate&quot; title=&quot;&quot;&gt;
-//constructor with wrapped class
-public class MediaLoadEventWrapper {
-    private MediaLoadEvent event;
-    //the following constructor will not be bound as MediaLoadEvent will be removed from binding
-    public MediaLoadEventWrapper(MediaLoadEvent ev){ this.event = ev; }
-    public int getValue(){return event.getValue();}
-}
+<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="c1">//constructor with wrapped class
+</span><span class="c1"></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">MediaLoadEventWrapper</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">MediaLoadEvent</span> <span class="n">event</span><span class="o">;</span>
+    <span class="c1">//the following constructor will not be bound as MediaLoadEvent will be removed from binding
+</span><span class="c1"></span>    <span class="kd">public</span> <span class="nf">MediaLoadEventWrapper</span><span class="o">(</span><span class="n">MediaLoadEvent</span> <span class="n">ev</span><span class="o">){</span> <span class="k">this</span><span class="o">.</span><span class="na">event</span> <span class="o">=</span> <span class="n">ev</span><span class="o">;</span> <span class="o">}</span>
+    <span class="kd">public</span> <span class="kt">int</span> <span class="nf">getValue</span><span class="o">(){</span><span class="k">return</span> <span class="n">event</span><span class="o">.</span><span class="na">getValue</span><span class="o">();}</span>
+<span class="o">}</span>
 
-//constructor with parameters as the wrapped class
-public class PlayerWrapper implements HasEventDispatcherWrapper, HasSettings {
-    private SimplePlayer player;
+<span class="c1">//constructor with parameters as the wrapped class
+</span><span class="c1"></span><span class="kd">public</span> <span class="kd">class</span> <span class="nc">PlayerWrapper</span> <span class="kd">implements</span> <span class="n">HasEventDispatcherWrapper</span><span class="o">,</span> <span class="n">HasSettings</span> <span class="o">{</span>
+    <span class="kd">private</span> <span class="n">SimplePlayer</span> <span class="n">player</span><span class="o">;</span>
 
-    public PlayerWrapper(ViewGroup playerView){ player = new SimplePlayer(playerView); }
-    //...
-}
-</code></pre><p>In the new library we need to eliminate the generics from the subclasses of <code>PlayerEvent</code> class. Each generic Event will be wrapped in a dedicated WrapperType. Ok, but in this case we cannot use anymore the elegant interface <code>PlayerEventListener</code>. This can be fixed – up by adding a wrapper to the <code>PlayerEventListener</code> and <code>EventDispatcher</code> interfaces respectively. The new <code>PlayerEventListenerWrapper</code> class will not contain only a single generic method to handle all Events, but one method for each possible Event. This is clearly a disadvantage since the user code, in order to register to events, has to implement all callbacks (we cannot mark as optional methods on an interface in Java/C#).</p>
-<pre><code>&lt;pre class=&quot;brush: java; title: ; notranslate&quot; title=&quot;&quot;&gt;
-public interface PlayerEventListenerWrapper {
-    void onPlayerEvent(MediaLoadEventWrapper event);
-    void onPlayerEvent(MediaUnLoadEventWrapper event);
-}
-public interface EventDispatcherWrapper {
-    ListenerRegistrationWrapper addEventListener(PlayerEventListenerWrapper handler);
-}
-</code></pre><p>As an alternative we might explode the <code>PlayerEventListener</code> interface in a set of interfaces but in my opinion it creates more confusion. At this point we need to wrap the <code>Player</code> class in order to implement the new <code>EventDispatcherWrapper</code> interface instead of <code>EventDispatcher</code>. I have not decided to wrap the rest of the classes that are not impacted by these changes e.g. <code>HasSettings</code> interface remained intact. The diagram below depicts the resulting wrapper library structure:</p>
-<p><a href="http://www.andipalo.com/wp-content/uploads/2017/07/structure_wrapper_1.png"><img src="http://www.andipalo.com/wp-content/uploads/2017/07/structure_wrapper_1.png" alt=""></a></p>
+    <span class="kd">public</span> <span class="nf">PlayerWrapper</span><span class="o">(</span><span class="n">ViewGroup</span> <span class="n">playerView</span><span class="o">){</span> <span class="n">player</span> <span class="o">=</span> <span class="k">new</span> <span class="n">SimplePlayer</span><span class="o">(</span><span class="n">playerView</span><span class="o">);</span> <span class="o">}</span>
+    <span class="c1">//...
+</span><span class="c1"></span><span class="o">}</span>
+</code></pre></div><p>In the new library we need to eliminate the generics from the subclasses of <code>PlayerEvent</code> class. Each generic Event will be wrapped in a dedicated WrapperType. Ok, but in this case we cannot use anymore the elegant interface <code>PlayerEventListener</code>. This can be fixed – up by adding a wrapper to the <code>PlayerEventListener</code> and <code>EventDispatcher</code> interfaces respectively. The new <code>PlayerEventListenerWrapper</code> class will not contain only a single generic method to handle all Events, but one method for each possible Event. This is clearly a disadvantage since the user code, in order to register to events, has to implement all callbacks (we cannot mark as optional methods on an interface in Java/C#).</p>
+<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">public</span> <span class="kd">interface</span> <span class="nc">PlayerEventListenerWrapper</span> <span class="o">{</span>
+    <span class="kt">void</span> <span class="nf">onPlayerEvent</span><span class="o">(</span><span class="n">MediaLoadEventWrapper</span> <span class="n">event</span><span class="o">);</span>
+    <span class="kt">void</span> <span class="nf">onPlayerEvent</span><span class="o">(</span><span class="n">MediaUnLoadEventWrapper</span> <span class="n">event</span><span class="o">);</span>
+<span class="o">}</span>
+<span class="kd">public</span> <span class="kd">interface</span> <span class="nc">EventDispatcherWrapper</span> <span class="o">{</span>
+    <span class="n">ListenerRegistrationWrapper</span> <span class="nf">addEventListener</span><span class="o">(</span><span class="n">PlayerEventListenerWrapper</span> <span class="n">handler</span><span class="o">);</span>
+<span class="o">}</span>
+</code></pre></div><p>As an alternative we might explode the <code>PlayerEventListener</code> interface in a set of interfaces but in my opinion it creates more confusion. At this point we need to wrap the <code>Player</code> class in order to implement the new <code>EventDispatcherWrapper</code> interface instead of <code>EventDispatcher</code>. I have not decided to wrap the rest of the classes that are not impacted by these changes e.g. <code>HasSettings</code> interface remained intact. The diagram below depicts the resulting wrapper library structure:</p>
+<p><img src="/pics/structure_wrapper_1.png" alt="Wrapper Structure"></p>
 <p>At this point we can create the Android Bindings project as usual on Xamarin. I have created a <a href="https://github.com/sanandrea/SampleTestBinding">Demo Project</a> in github. We have to add the original library jar as well as our new wrapper jar in the bindings project; both jars must have “EmbeddedJar” as Build Action. We need to bind the original library jar because we need the <code>C#</code> mapping for the original classes that were not wrapped e.g. <code>Settings</code>. In this way our effort on the wrapper library is minimal. We will still encounter the Binding error for the original jar, but we can avoid that by excluding certain packages from the binding project. In this case I have added the following directive to the <code>Metadata.xml</code> file in the <code>Transforms</code> folder of the Binding Project:</p>
-<pre><code>&lt;pre class=&quot;brush: xml; title: ; notranslate&quot; title=&quot;&quot;&gt;
-&lt;remove-node path=&quot;/api/package[@name='com.example.awesomelibrary.ap.events.impl']&quot; /&gt;
-</code></pre><p>If everything goes well the Bindings project will output a <code>.dll</code> which will contain the mappings for both jars each in its own namespace. The namespace is the same as the Java package name converted with first letter uppercase. The following code snippet shows the usage of the two APIs<a href="#footnotes" title="Jump to Footnote"><!-- raw HTML omitted -->2<!-- raw HTML omitted --></a> in the client code i.e. a sample Android application:</p>
-<pre><code>&lt;pre class=&quot;brush: csharp; title: ; notranslate&quot; title=&quot;&quot;&gt;
-//Wrapper Lib
-using Com.Example.Thineventswrapper;
-using Com.Example.Thineventswrapper.Wrapper.Events.Data;
-using Com.Example.Thineventswrapper.Wrapper.Events;
-//Original Lib
-using Com.Example.Awesomelibrary.AP.Models;
+<div class="highlight"><pre class="chroma"><code class="language-xml" data-lang="xml"><span class="nt">&lt;remove-node</span> <span class="na">path=</span><span class="s">&#34;/api/package[@name=&#39;com.example.awesomelibrary.ap.events.impl&#39;]&#34;</span> <span class="nt">/&gt;</span>
+</code></pre></div><p>If everything goes well the Bindings project will output a <code>.dll</code> which will contain the mappings for both jars each in its own namespace. The namespace is the same as the Java package name converted with first letter uppercase. The following code snippet shows the usage of the two APIs<sup id="fnref:2"><a href="#fn:2" class="footnote-ref" role="doc-noteref">2</a></sup> in the client code i.e. a sample Android application:</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="c1">//Wrapper Lib
+</span><span class="c1"></span><span class="k">using</span> <span class="nn">Com.Example.Thineventswrapper</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">Com.Example.Thineventswrapper.Wrapper.Events.Data</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">Com.Example.Thineventswrapper.Wrapper.Events</span><span class="p">;</span>
+<span class="c1">//Original Lib
+</span><span class="c1"></span><span class="k">using</span> <span class="nn">Com.Example.Awesomelibrary.AP.Models</span><span class="p">;</span>
+<span class="na">
+</span><span class="na">[Activity(Label = &#34;DemoApp&#34;, MainLauncher = true, Icon = &#34;@mipmap/icon&#34;)]</span>
+<span class="k">public</span> <span class="k">class</span> <span class="nc">MainActivity</span> <span class="p">:</span> <span class="n">Activity</span><span class="p">,</span> <span class="n">IPlayerEventListenerWrapper</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="n">Button</span> <span class="n">button</span><span class="p">;</span>
+    <span class="k">private</span> <span class="n">IListenerRegistrationWrapper</span> <span class="n">regHandler</span><span class="p">;</span>
 
-[Activity(Label = &quot;DemoApp&quot;, MainLauncher = true, Icon = &quot;@mipmap/icon&quot;)]
-public class MainActivity : Activity, IPlayerEventListenerWrapper
-{
-    private Button button;
-    private IListenerRegistrationWrapper regHandler;
+    <span class="k">protected</span> <span class="k">override</span> <span class="k">void</span> <span class="n">OnCreate</span><span class="p">(</span><span class="n">Bundle</span> <span class="n">savedInstanceState</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">base</span><span class="p">.</span><span class="n">OnCreate</span><span class="p">(</span><span class="n">savedInstanceState</span><span class="p">);</span>
+        <span class="n">SetContentView</span><span class="p">(</span><span class="n">Resource</span><span class="p">.</span><span class="n">Layout</span><span class="p">.</span><span class="n">Main</span><span class="p">);</span>
+        <span class="n">button</span> <span class="p">=</span> <span class="n">FindViewById</span><span class="p">&lt;</span><span class="n">Button</span><span class="p">&gt;(</span><span class="n">Resource</span><span class="p">.</span><span class="n">Id</span><span class="p">.</span><span class="n">myButton</span><span class="p">);</span>
 
-    protected override void OnCreate(Bundle savedInstanceState)
-    {
-        base.OnCreate(savedInstanceState);
-        SetContentView(Resource.Layout.Main);
-        button = FindViewById&lt;Button&gt;(Resource.Id.myButton);
+        <span class="c1">//Create the PlayerWrapper
+</span><span class="c1"></span>        <span class="n">PlayerWrapper</span> <span class="n">pv</span> <span class="p">=</span> <span class="k">new</span> <span class="n">PlayerWrapper</span><span class="p">(</span><span class="k">null</span><span class="p">);</span>
 
-        //Create the PlayerWrapper
-        PlayerWrapper pv = new PlayerWrapper(null);
+        <span class="c1">//Register to events from the Wrapper Lib
+</span><span class="c1"></span>        <span class="n">regHandler</span> <span class="p">=</span> <span class="n">pv</span><span class="p">.</span><span class="n">AsEventDispatcherWrapper</span><span class="p">().</span><span class="n">AddEventListener</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
 
-        //Register to events from the Wrapper Lib
-        regHandler = pv.AsEventDispatcherWrapper().AddEventListener(this);
-
-        //Read settings from the Original Lib
-        PlayerSettings settings = pv.AsSettings();
-        if (settings.Protection == DRMProtection.PlayReady) {
-            Console.WriteLine(&quot;PlayerReady protection&quot;);
-        }
+        <span class="c1">//Read settings from the Original Lib
+</span><span class="c1"></span>        <span class="n">PlayerSettings</span> <span class="n">settings</span> <span class="p">=</span> <span class="n">pv</span><span class="p">.</span><span class="n">AsSettings</span><span class="p">();</span>
+        <span class="k">if</span> <span class="p">(</span><span class="n">settings</span><span class="p">.</span><span class="n">Protection</span> <span class="p">==</span> <span class="n">DRMProtection</span><span class="p">.</span><span class="n">PlayReady</span><span class="p">)</span> <span class="p">{</span>
+            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&#34;PlayerReady protection&#34;</span><span class="p">);</span>
+        <span class="p">}</span>
             
-    }
+    <span class="p">}</span>
 
-    protected override void OnDestroy()
-    {
-        regHandler.Remove();
-        base.OnDestroy();
-    }
-    public void OnPlayerEvent(MediaUnLoadEventWrapper p0){}
+    <span class="k">protected</span> <span class="k">override</span> <span class="k">void</span> <span class="n">OnDestroy</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="n">regHandler</span><span class="p">.</span><span class="n">Remove</span><span class="p">();</span>
+        <span class="k">base</span><span class="p">.</span><span class="n">OnDestroy</span><span class="p">();</span>
+    <span class="p">}</span>
+    <span class="k">public</span> <span class="k">void</span> <span class="n">OnPlayerEvent</span><span class="p">(</span><span class="n">MediaUnLoadEventWrapper</span> <span class="n">p0</span><span class="p">){}</span>
     
-    public void OnPlayerEvent(MediaLoadEventWrapper p0)
-    {
-        RunOnUiThread(() =&gt;
-        {
-            button.Text = &quot;Loaded &quot; + p0.Value;
-        });
-    }
-}
-</code></pre><p>And that’s it! Hope this guide might be helpful for someone like me that struggled for some time in this problem of Xamarin framework. Happy coding!</p>
+    <span class="k">public</span> <span class="k">void</span> <span class="n">OnPlayerEvent</span><span class="p">(</span><span class="n">MediaLoadEventWrapper</span> <span class="n">p0</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">RunOnUiThread</span><span class="p">(()</span> <span class="p">=&gt;</span>
+        <span class="p">{</span>
+            <span class="n">button</span><span class="p">.</span><span class="n">Text</span> <span class="p">=</span> <span class="s">&#34;Loaded &#34;</span> <span class="p">+</span> <span class="n">p0</span><span class="p">.</span><span class="n">Value</span><span class="p">;</span>
+        <span class="p">});</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div><p>And that’s it! Hope this guide might be helpful for someone like me that struggled for some time in this problem of Xamarin framework. Happy coding!</p>
 <p>ap</p>
 <h2 id="team-contributors">Team contributors</h2>
 <p><a href="https://it.linkedin.com/in/emmanuelevilla">Emmanuele Villa</a><br>
@@ -228,8 +219,17 @@ public class MainActivity : Activity, IPlayerEventListenerWrapper
 <a href="https://www.linkedin.com/in/mirko-gitto-70044871">Mirko Gitto</a></p>
 <hr>
 <h2 id="footnotes">Footnotes</h2>
-<h4 id="1-now-one-can-argue-that-it-would-be-not-useful-to-waste-time-on-binding-libraries-that-have-generic-types-on-their-apis-but-in-some-occasions-the-library-to-be-bound-is-the-kernel-of-the-mobile-app-itself-a-good-example-is-the-player-library-if-one-has-to-develop-a-mobile-media-consuming-app-that-relies-it-has-to-rely-on-some-player-sdk-and-the-logic-that-the-player-has-implemented-is-higher-in-3-4-orders-of-magnitude-in-terms-of-lines-of-code">1) Now one can argue that it would be not useful to waste time on binding libraries that have generic types on their APIs, but in some occasions the library to be bound is the kernel of the Mobile App itself. A good example is the Player Library. If one has to develop a mobile media consuming app that relies it has to rely on some Player SDK and the logic that the player has implemented is higher in 3-4 orders of magnitude in terms of lines of code.</h4>
-<h4 id="2-if-the-original-library-has-third-party-jars-dependencies-they-must-be-included-in-the-client-code-too-the-build-action-for-these-type-of-jars-is-androidjavalibrary-in-this-example-i-have-included-the-gsonhttpsgithubcomgooglegson-library-as-dependency-of-the-original-jar">2) If the original library has third party jars dependencies they must be included in the client code too. The Build Action for these type of jars is <code>AndroidJavaLibrary</code>, in this example I have included the <a href="https://github.com/google/gson">Gson</a> library as dependency of the original jar.</h4>
+<section class="footnotes" role="doc-endnotes">
+<hr>
+<ol>
+<li id="fn:1" role="doc-endnote">
+<p>Now one can argue that it would be not useful to waste time on binding libraries that have generic types on their APIs, but in some occasions the library to be bound is the kernel of the Mobile App itself. A good example is the Player Library. If one has to develop a mobile media consuming app that relies it has to rely on some Player SDK and the logic that the player has implemented is higher in 3-4 orders of magnitude in terms of lines of code.&#160;<a href="#fnref:1" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+<li id="fn:2" role="doc-endnote">
+<p>If the original library has third party jars dependencies they must be included in the client code too. The Build Action for these type of jars is <code>AndroidJavaLibrary</code>, in this example I have included the <a href="https://github.com/google/gson">Gson</a> library as dependency of the original jar.&#160;<a href="#fnref:2" class="footnote-backref" role="doc-backlink">&#x21a9;&#xfe0e;</a></p>
+</li>
+</ol>
+</section>
 
 
 <footer>

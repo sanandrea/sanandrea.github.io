@@ -6,6 +6,7 @@
     
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="/css/fonts.css">
+    <link rel="stylesheet" href="/css/syntax.css">
     
     <title>Andi Palo</title>
     <link rel="icon" type="image/png" href="/assets/img/favicon.ico" />
@@ -41,7 +42,7 @@ It begins with the necessity of one my managers to invite me for a two week peri
 <h2 id="the-task">The Task</h2>
 <p>So here comes my task: convert the script to use sqlite and migrate the client MS Access DB to sqlite.</p>
 <p>I was not familiar with the tool developed nor the Windows developing environment, but my intention was to finish the job as soon as possible. My first thought, after setting up the developement environment in a windows virtual machine, was to install the 64 bit version of the MS Access driver if Microsoft would have released it as a standalone executable. After some googling found the <a href="https://www.microsoft.com/en-us/download/details.aspx?id=13255">Microsoft Access Database Engine 2010 Redistributable</a> which came in two flavours 32 and 64 bits. Impatient launched the install but was greeted by:</p>
-<p><a href="https://wordpress-sanandrea.rhcloud.com/wp-content/uploads/2015/12/Cattura.png"><img src="https://wordpress-sanandrea.rhcloud.com/wp-content/uploads/2015/12/Cattura-300x154.png" alt="Cattura"></a></p>
+<p><img src="/pics/Cattura-300x154.png" alt="Capture"></p>
 <p>As I found out Microsoft does not support a side by side installation of Office 32 bit and the MS Access Database Engine in 64 bit. The installation error can be bypassed by the following <a href="http://stackoverflow.com/questions/12270453/ms-access-db-engine-32-bit-with-office-64-bit">guide</a>, but it requires the modification of some windows registry entries, which we cannot do in the client machines.</p>
 <p>In that very moment I was convinced that it was time for the client to use a decent database system. So now it begins the amalgamation part of my experience.</p>
 <h2 id="easy-migration">Easy Migration</h2>
@@ -80,7 +81,7 @@ It begins with the necessity of one my managers to invite me for a two week peri
 <li>now in the build folder should be present both sqlite3.h and sqlite3.c</li>
 </ul>
 <h3 id="tricky-part">Tricky part</h3>
-<p>The sqlite guide is clear: if you need a x64 binary on windows it is recommended to use Visual Studio (for 32 bit MinGW is also valid). Now comes the tricky part for me, because I had to compile the dll under Visual Studio 2010. I read that I had to open the Visual Studio command prompt from the tools menu. The command prompt loads the environement variables for Visual Studio compiler, by default x86. So one should go at C:Program Files (x86)Microsoft Visual Studio 10.0VC folder and load environment variables for x64 architecture with the following command:</p>
+<p>The sqlite guide is clear: if you need a x64 binary on windows it is recommended to use Visual Studio (for 32 bit MinGW is also valid). Now comes the tricky part for me, because I had to compile the dll under Visual Studio 2010. I read that I had to open the Visual Studio command prompt from the tools menu. The command prompt loads the environement variables for Visual Studio compiler, by default x86. So one should go at C:\Program Files (x86)\Microsoft Visual Studio\10.0\VC folder and load environment variables for x64 architecture with the following command:</p>
 <pre><code>vsvarsall.bat amd64
 </code></pre><p>Now the compiling toolchain is ready. I am ready to install except a small detail. I need the .lib file for my C++ project on Visual Studio, the dll is not enough. To do this there is needed a file (.def extension) on which are listed the module statements that describe various attributes of the dll. I took the latest .def file from the latest precompiled binaries of sqlite for windows. Finally the command to compile is:</p>
 <pre><code>cl sqlite3.c -link -dll -out:sqlite3.dll /MACHINE:x64 /def:sqlite3.def
