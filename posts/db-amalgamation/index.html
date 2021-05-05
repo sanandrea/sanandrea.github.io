@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/fonts.css">
+    
+    <title>Andi Palo</title>
+    <link rel="icon" type="image/png" href="/assets/img/favicon.ico" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css"
+        integrity="sha384-oS3vJWv+0UjzBfQzYUhtDYW+Pj2yciDJxpsK1OYPAYjqT085Qq/1cq5FLXAZQ7Ay" crossorigin="anonymous">
+    <script src="/js/dark.js" defer=""></script>
+
+</head>
+
+
+<html>
+<!DOCTYPE html>
+<html>
+
+<body>
+  <header class="site-header">
+
+    <div class="wrapper">
+      <a class="muted small" href="https://andipalo.com/">Andi Palo</a>
+    </div>
+  </header>
+</body>
+
+</html>
+
+<h1>DB Amalgamation</h1>
+<p class="post-meta"><time itemprop="datePublished">December 24, 2015</time>
+</p>
+<hr>
+<p>I have always wanted to keep a blog but have always failed to create one, because of the lack of creativity and storytelling (as you will find out on this post). But in the recent two weeks I had an interesting work experience (and also funny) that I would like to share.<br>
+It begins with the necessity of one my managers to invite me for a two week period in the Italy office of the company. The necessity was urgent and with the highest priority and consisted in a sqlite DB migration. Apparently one of our clients has a stone age MS Access DB to store configuration parameters of CAD automation scripts (we are in 2015)!.</p>
+<p>My company built an automation tool for this client which should get the configuration parameters from that DB. The tool was written in C++ and compiled as 64 bit windows dll. Super optimized and lightning fast. The development phase of the project used a dummy MS Access DB and everything went well till the deployment date: the dll was not very happy with the 32 bit version of the MS Access driver library. Many “efforts” were done, which I am not aware of any, to find a workaround for the problem. The team found out, that the only official way to do this was to upgrade MS Access to 64 bit version… This was unacceptable because the license cost for the client would be unsustainable.</p>
+<h2 id="the-task">The Task</h2>
+<p>So here comes my task: convert the script to use sqlite and migrate the client MS Access DB to sqlite.</p>
+<p>I was not familiar with the tool developed nor the Windows developing environment, but my intention was to finish the job as soon as possible. My first thought, after setting up the developement environment in a windows virtual machine, was to install the 64 bit version of the MS Access driver if Microsoft would have released it as a standalone executable. After some googling found the <a href="https://www.microsoft.com/en-us/download/details.aspx?id=13255">Microsoft Access Database Engine 2010 Redistributable</a> which came in two flavours 32 and 64 bits. Impatient launched the install but was greeted by:</p>
+<p><a href="https://wordpress-sanandrea.rhcloud.com/wp-content/uploads/2015/12/Cattura.png"><img src="https://wordpress-sanandrea.rhcloud.com/wp-content/uploads/2015/12/Cattura-300x154.png" alt="Cattura"></a></p>
+<p>As I found out Microsoft does not support a side by side installation of Office 32 bit and the MS Access Database Engine in 64 bit. The installation error can be bypassed by the following <a href="http://stackoverflow.com/questions/12270453/ms-access-db-engine-32-bit-with-office-64-bit">guide</a>, but it requires the modification of some windows registry entries, which we cannot do in the client machines.</p>
+<p>In that very moment I was convinced that it was time for the client to use a decent database system. So now it begins the amalgamation part of my experience.</p>
+<h2 id="easy-migration">Easy Migration</h2>
+<p>Googling out any automatic migration tool from MS Access to sqlite, I found many paid solutions but also some free tools. My saviour had published also the source code of his tool at <a href="http://mdb2sq3.codeplex.com/">http://mdb2sq3.codeplex.com/</a>. The tool is written in C# and at first I was hesitating to use it. But this kind person had also shipped a compiled binary with the project, binary which allowed me to migrate the database table schema and data from MS Access to sqlite almost instantly.</p>
+<p>Our database had also some views on it that could be easily migrated manually by a simple copy&amp;paste of the SQL command. I felt a little sorry only to take from the open-source community and not give anything, so I decided to delve in the C# project and add the migration logic for views. The code is written in a very professional way and it was quite easy for me to find the entry point of my new code.</p>
+<h3 id="simple-algo">Simple Algo</h3>
+<p>Most of views were added sqlite side, except for oucchhh RIGHT JOIN views: sqlite does not support right joins. I could just copy and modify manually the sql command of these views to use left joins instead of right joins by swapping table order and print an error to the user for the views that could not be migrated automatically. But this would be so easy, there was no added value in my trivial contribution. So I decided to program this simple algorithm for this task.</p>
+<ul>
+<li>Take the views that failed to migrate automatically</li>
+<li>Regex find all occurences of RIGHT JOIN in the sql command text</li>
+<li>foreach RIGHT JOIN
+<ul>
+<li>regex find the left and the right word</li>
+<li>if the left word finishes with ‘)’ char: left word = all the string that closes that bracket going backwards.</li>
+<li>if the right word begins with ‘(‘ char: right word = all the string that closes that bracket going forward.</li>
+<li>swap left word with right word</li>
+<li>replace ‘RIGHT JOIN’ with ‘LEFT JOIN’</li>
+</ul>
+</li>
+</ul>
+<p>Pretty straight forward… The resulting <a href="https://github.com/sanandrea/mdb2sq3">code</a> can be found on my github profile. Sorry codeplex, no offence but github is just enough for me. We are getting closer to the amalgamation part.</p>
+<h2 id="sqlite-amalgamation">Sqlite Amalgamation</h2>
+<p>Very excited that the views were all there, when I just realized that some columns on certain views had null values. My first thought was I was doing something wrong with shell commands at sqlite3.exe. So I opened the database file with a sqlite reader on my mac. Surprisingly the columns were not empty. I tried sqlite3 on my mac and it showed data on the previous empty columns. I checked the sqlite3 version on my mac and it was 3.8.10.2 while on windows it was 3.9.1. Something changed with last version –&gt; I posted the question on <a href="http://stackoverflow.com/questions/33260693/sqlite3-exe-shows-sqlite-null-column-values-whereas-on-mac-it-is-ok">Stackoverflow</a> and meanwhile, try to find the old version dll for windows. Sqlite web site does not have an archive for old sqlite binaries, and I searched the web with no luck. I just realized that it would have been faster if I compiled the dll myself.</p>
+<h3 id="build-steps">Build steps</h3>
+<p>The sqlite project combines hundreds of source files in its executable so they provide a simpler way in order to compile it. The amalgamation files. I followed the steps below in order to compile it:</p>
+<ul>
+<li>Go to sqlite source code site and select tags <a href="https://www.sqlite.org/src/taglist">https://www.sqlite.org/src/taglist</a></li>
+<li>Click on time so you go to the correct timestamp. Afterwards in the timeline select the correct hash commit (e.g. 3.8.10.2 is <a href="https://www.sqlite.org/src/info/2ef4f3a5b1d1d0c4">https://www.sqlite.org/src/info/2ef4f3a5b1d1d0c4</a>)</li>
+<li>Download as tarball and extract it</li>
+<li>It is needed a Unix like system to compile the amalgamation file. Make a build folder for example at the same level on which stands the source code folder (not mandatory). Enter with terminal in build folder and configure and compile sqlite3.c target
+<ul>
+<li><code>../sqlite/configure</code></li>
+<li><code>make sqlite3.c</code></li>
+</ul>
+</li>
+<li>now in the build folder should be present both sqlite3.h and sqlite3.c</li>
+</ul>
+<h3 id="tricky-part">Tricky part</h3>
+<p>The sqlite guide is clear: if you need a x64 binary on windows it is recommended to use Visual Studio (for 32 bit MinGW is also valid). Now comes the tricky part for me, because I had to compile the dll under Visual Studio 2010. I read that I had to open the Visual Studio command prompt from the tools menu. The command prompt loads the environement variables for Visual Studio compiler, by default x86. So one should go at C:Program Files (x86)Microsoft Visual Studio 10.0VC folder and load environment variables for x64 architecture with the following command:</p>
+<pre><code>vsvarsall.bat amd64
+</code></pre><p>Now the compiling toolchain is ready. I am ready to install except a small detail. I need the .lib file for my C++ project on Visual Studio, the dll is not enough. To do this there is needed a file (.def extension) on which are listed the module statements that describe various attributes of the dll. I took the latest .def file from the latest precompiled binaries of sqlite for windows. Finally the command to compile is:</p>
+<pre><code>cl sqlite3.c -link -dll -out:sqlite3.dll /MACHINE:x64 /def:sqlite3.def
+</code></pre><p>Given the fact that the def file was for a newer version of sqlite the linker complained for some missing symbols. I removed those symbols from the sqlite3.def file and it compiled correctly the dll file and also produced .lib and .exp files.</p>
+<p>Finally I have sqlite 3.8.10.2 on windows, and it does not present the problem of empty columns. I was pretty calmed at the moment because I had a fully working sqlite db and a tool to migrate MS Access files automatically in the future.</p>
+<p>In the meantime I posted the empty column issue into in the sqlite mailing list. And a kind developer at sqlite pointed out the problem:</p>
+<blockquote>
+<p>The schema syntax in the example database is incorrect. It uses<br>
+single-quotes to quote identifier names, where it should be using<br>
+double-quotes. In other words, it says things like:<br>
+… PRIMARY KEY(‘ID_KFEATURE’) …<br>
+When the correct syntax is:<br>
+… PRIMARY KEY(“ID_KFEATURE”) …<br>
+<!-- raw HTML omitted -->SQLite<!-- raw HTML omitted --> has historically tolerated the incorrect feature. A decade<br>
+ago, I thought it would be a cool feature to have a more “forgiving”<br>
+syntax. I now realize that was a mistake and I call this a<br>
+mis-feature. But it is there and so we have to support it moving<br>
+forward.</p>
+</blockquote>
+<h3 id="my-contribution">My contribution</h3>
+<p>So I had to change only one line at the project</p>
+<pre><code>public static String EscapeIdentifier(String identifier){return &quot;'&quot; + identifier.Replace(&quot;'&quot;, &quot;''&quot;) + &quot;'&quot;;}
+</code></pre><p>into</p>
+<pre><code>public static String EscapeIdentifier(String identifier){return &quot;&quot;&quot; + identifier.Replace(&quot;&quot;&quot;, &quot;&quot;&quot;&quot;) + &quot;&quot;&quot;;}
+</code></pre><p>and everything was ok.</p>
+<p>This was part of my journey on the migration of the database of our client. Glad to have a happy ending and hope that this information would help someone else.</p>
+<p>apwelcome! Happy coding!!!</p>
+
+
+<footer>
+    <div>
+        <h3><a href="https://andipalo.com/posts">Back to all posts</a></h3>
+    </div>
+    <hr>
+    <p>Go <a href="https://andipalo.com//index.xml">here</a> for an RSS feed.</p>
+</footer>
+
+</html>
