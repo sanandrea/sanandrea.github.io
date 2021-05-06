@@ -41,111 +41,112 @@
 I spent three days in Dublin and had a chance to make a second visit to the city. All is left from this trip are the souvenirs on the left, which I’ll get rid very quickly 🍻 (I could not find Programmer’s Tears whiskey), and the preparation with Codility Lessons. These lessons consist in various algorithm solving problems which in my case helped me a lot to polish some CS algorithm concepts. I solved all ‘Painless’ and most of ‘Respectable’ ones by myself, and noticed that in particular the solution of two problems could not be found online. So I just wanted to publish my solution to the problems of Sieve of Eratosthenes lesson. Unfortunately I cannot post the problems because they are subject of copyright by Codility. Both solutions get 100% score on correctness and performance. Please find the spartan explanation as comments between source code lines.</p>
 <hr>
 <h3 id="countsemiprimes">CountSemiprimes</h3>
-<pre><code>class Solution {
-    public int[] solution(int N, int[] P, int[] Q) {
-        //the first semi prime is number 4
-        if (N &lt;= 3){
-            return new int[1];
-        }
-        // build the sieve of primes up to N/2. Since
-        // the smallest prime is 2, we cannot consider
-        // primes bigger than N/2 because the product 
-        // with 2 would result bigger than N.
-        boolean[] primes = new boolean[N/2 + 1];
-        for (int i = 0;i &lt;= N / 2;i++){primes[i] = true;}
-        primes[0] = false;
-        primes[1] = false;
-        int i = 2;
+<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">class</span> <span class="nc">Solution</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="nf">solution</span><span class="o">(</span><span class="kt">int</span> <span class="n">N</span><span class="o">,</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">P</span><span class="o">,</span> <span class="kt">int</span><span class="o">[]</span> <span class="n">Q</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//the first semi prime is number 4
+</span><span class="c1"></span>        <span class="k">if</span> <span class="o">(</span><span class="n">N</span> <span class="o">&lt;=</span> <span class="n">3</span><span class="o">){</span>
+            <span class="k">return</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">1</span><span class="o">];</span>
+        <span class="o">}</span>
+        <span class="c1">// build the sieve of primes up to N/2. Since
+</span><span class="c1"></span>        <span class="c1">// the smallest prime is 2, we cannot consider
+</span><span class="c1"></span>        <span class="c1">// primes bigger than N/2 because the product 
+</span><span class="c1"></span>        <span class="c1">// with 2 would result bigger than N.
+</span><span class="c1"></span>        <span class="kt">boolean</span><span class="o">[]</span> <span class="n">primes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">boolean</span><span class="o">[</span><span class="n">N</span><span class="o">/</span><span class="n">2</span> <span class="o">+</span> <span class="n">1</span><span class="o">];</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span><span class="n">i</span> <span class="o">&lt;=</span> <span class="n">N</span> <span class="o">/</span> <span class="n">2</span><span class="o">;</span><span class="n">i</span><span class="o">++){</span><span class="n">primes</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;}</span>
+        <span class="n">primes</span><span class="o">[</span><span class="n">0</span><span class="o">]</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="n">primes</span><span class="o">[</span><span class="n">1</span><span class="o">]</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+        <span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">2</span><span class="o">;</span>
         
-        while (i * i &lt;= N / 2){
-            if (!primes[i]){
-                i++;
-                continue;
-            }
-            int k = i * i;
-            while(k &lt;= N / 2){
-                primes[k] = false;
-                k += i;
-            }
-            i++;
-        }
+        <span class="k">while</span> <span class="o">(</span><span class="n">i</span> <span class="o">*</span> <span class="n">i</span> <span class="o">&lt;=</span> <span class="n">N</span> <span class="o">/</span> <span class="n">2</span><span class="o">){</span>
+            <span class="k">if</span> <span class="o">(!</span><span class="n">primes</span><span class="o">[</span><span class="n">i</span><span class="o">]){</span>
+                <span class="n">i</span><span class="o">++;</span>
+                <span class="k">continue</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="n">i</span> <span class="o">*</span> <span class="n">i</span><span class="o">;</span>
+            <span class="k">while</span><span class="o">(</span><span class="n">k</span> <span class="o">&lt;=</span> <span class="n">N</span> <span class="o">/</span> <span class="n">2</span><span class="o">){</span>
+                <span class="n">primes</span><span class="o">[</span><span class="n">k</span><span class="o">]</span> <span class="o">=</span> <span class="kc">false</span><span class="o">;</span>
+                <span class="n">k</span> <span class="o">+=</span> <span class="n">i</span><span class="o">;</span>
+            <span class="o">}</span>
+            <span class="n">i</span><span class="o">++;</span>
+        <span class="o">}</span>
 
-        // build another sieve for semi primes now
-        boolean[] semiPrimes = new boolean[N + 1];
+        <span class="c1">// build another sieve for semi primes now
+</span><span class="c1"></span>        <span class="kt">boolean</span><span class="o">[]</span> <span class="n">semiPrimes</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">boolean</span><span class="o">[</span><span class="n">N</span> <span class="o">+</span> <span class="n">1</span><span class="o">];</span>
 
-        for (int j = 1; j &lt;= N/2; j++){
-            if (primes[j]){
-                int k = j;
-                // be aware here, the product may overflow
-                // resulting in a negative number that passes
-                // the check to be smaller than N
-                long product = (long)k * j;
-                while(product &lt;= N){
-                    if (primes[k]){
-                        semiPrimes[j*k] = true;
-                        } 
-                    k++;
-                    product = (long)k * j;
-                }
-            }
-        }
-        //use prefix sum to count the semi primes
-        //in the required queries.
-        int[] prefix_sum = new int[N + 1];
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">1</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">N</span><span class="o">/</span><span class="n">2</span><span class="o">;</span> <span class="n">j</span><span class="o">++){</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">primes</span><span class="o">[</span><span class="n">j</span><span class="o">]){</span>
+                <span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="n">j</span><span class="o">;</span>
+                <span class="c1">// be aware here, the product may overflow
+</span><span class="c1"></span>                <span class="c1">// resulting in a negative number that passes
+</span><span class="c1"></span>                <span class="c1">// the check to be smaller than N
+</span><span class="c1"></span>                <span class="kt">long</span> <span class="n">product</span> <span class="o">=</span> <span class="o">(</span><span class="kt">long</span><span class="o">)</span><span class="n">k</span> <span class="o">*</span> <span class="n">j</span><span class="o">;</span>
+                <span class="k">while</span><span class="o">(</span><span class="n">product</span> <span class="o">&lt;=</span> <span class="n">N</span><span class="o">){</span>
+                    <span class="k">if</span> <span class="o">(</span><span class="n">primes</span><span class="o">[</span><span class="n">k</span><span class="o">]){</span>
+                        <span class="n">semiPrimes</span><span class="o">[</span><span class="n">j</span><span class="o">*</span><span class="n">k</span><span class="o">]</span> <span class="o">=</span> <span class="kc">true</span><span class="o">;</span>
+                        <span class="o">}</span> 
+                    <span class="n">k</span><span class="o">++;</span>
+                    <span class="n">product</span> <span class="o">=</span> <span class="o">(</span><span class="kt">long</span><span class="o">)</span><span class="n">k</span> <span class="o">*</span> <span class="n">j</span><span class="o">;</span>
+                <span class="o">}</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="c1">//use prefix sum to count the semi primes
+</span><span class="c1"></span>        <span class="c1">//in the required queries.
+</span><span class="c1"></span>        <span class="kt">int</span><span class="o">[]</span> <span class="n">prefix_sum</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">N</span> <span class="o">+</span> <span class="n">1</span><span class="o">];</span>
         
-        int sum = 0;
-        for (int j = 0; j &lt;= N;j++){
-            if (semiPrimes[j]){ sum++; }
-            prefix_sum[j] = sum;
-        }
-        int[] result = new int[P.length];
-        for (int j = 0; j &lt; P.length; j++){
-            result[j] = prefix_sum[Q[j]] - prefix_sum[P[j]-1];
-        }
-        return result;
-    }
-}
-</code></pre><h3 id="countnondivisible">CountNonDivisible</h3>
-<pre><code>class Solution {
-    public int[] solution(int[] A) {
-        //each element A is within the range [1..2 * N]
-        int[] factors = new int[A.length * 2 + 1];
+        <span class="kt">int</span> <span class="n">sum</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;=</span> <span class="n">N</span><span class="o">;</span><span class="n">j</span><span class="o">++){</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">semiPrimes</span><span class="o">[</span><span class="n">j</span><span class="o">]){</span> <span class="n">sum</span><span class="o">++;</span> <span class="o">}</span>
+            <span class="n">prefix_sum</span><span class="o">[</span><span class="n">j</span><span class="o">]</span> <span class="o">=</span> <span class="n">sum</span><span class="o">;</span>
+        <span class="o">}</span>
+        <span class="kt">int</span><span class="o">[]</span> <span class="n">result</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">P</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">j</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span> <span class="n">j</span> <span class="o">&lt;</span> <span class="n">P</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">j</span><span class="o">++){</span>
+            <span class="n">result</span><span class="o">[</span><span class="n">j</span><span class="o">]</span> <span class="o">=</span> <span class="n">prefix_sum</span><span class="o">[</span><span class="n">Q</span><span class="o">[</span><span class="n">j</span><span class="o">]]</span> <span class="o">-</span> <span class="n">prefix_sum</span><span class="o">[</span><span class="n">P</span><span class="o">[</span><span class="n">j</span><span class="o">]-</span><span class="n">1</span><span class="o">];</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div><h3 id="countnondivisible">CountNonDivisible</h3>
+<div class="highlight"><pre class="chroma"><code class="language-java" data-lang="java"><span class="kd">class</span> <span class="nc">Solution</span> <span class="o">{</span>
+    <span class="kd">public</span> <span class="kt">int</span><span class="o">[]</span> <span class="nf">solution</span><span class="o">(</span><span class="kt">int</span><span class="o">[]</span> <span class="n">A</span><span class="o">)</span> <span class="o">{</span>
+        <span class="c1">//each element A is within the range [1..2 * N]
+</span><span class="c1"></span>        <span class="kt">int</span><span class="o">[]</span> <span class="n">factors</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">A</span><span class="o">.</span><span class="na">length</span> <span class="o">*</span> <span class="n">2</span> <span class="o">+</span> <span class="n">1</span><span class="o">];</span>
         
-        //count how many times each factor appear
-        for (int i = 0;i &lt; A.length; i++){
-            factors[A[i]]++;
-        }
+        <span class="c1">//count how many times each factor appear
+</span><span class="c1"></span>        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">A</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++){</span>
+            <span class="n">factors</span><span class="o">[</span><span class="n">A</span><span class="o">[</span><span class="n">i</span><span class="o">]]++;</span>
+        <span class="o">}</span>
         
-        //build a sieve which saves all the common
-        //multiples smaller than 2 * N of the input factors 
-        int multi[] = new int [factors.length];
+        <span class="c1">//build a sieve which saves all the common
+</span><span class="c1"></span>        <span class="c1">//multiples smaller than 2 * N of the input factors 
+</span><span class="c1"></span>        <span class="kt">int</span> <span class="n">multi</span><span class="o">[]</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span> <span class="o">[</span><span class="n">factors</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
         
-        for (int i = 1;i &lt; multi.length;i++){
-            if (factors[i] == 0) 
-                continue;
-            int k = 1;
-            long product = (long)i * k;
-            while(product &lt; multi.length){
-                //we increase the number of multiples
-                //by the number of factors in the input 
-                //array
-                multi[k * i] += factors[i];
-                k++;
-                product = (long)i * k;
-            }
-        }
-        //for each input element the number of non divisors
-        //is the difference of the total number of elements
-        //and the number of times that element appears as a
-        //multiple of other input elements
-        int result[] = new int[A.length];
-        for (int i = 0;i &lt; A.length; i++){
-            result[i] = A.length - multi[A[i]];
-        }
-        return result;
-    }
-}
-</code></pre><p>Any suggestion is more than welcome! Happy coding!!!</p>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">1</span><span class="o">;</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">multi</span><span class="o">.</span><span class="na">length</span><span class="o">;</span><span class="n">i</span><span class="o">++){</span>
+            <span class="k">if</span> <span class="o">(</span><span class="n">factors</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">==</span> <span class="n">0</span><span class="o">)</span> 
+                <span class="k">continue</span><span class="o">;</span>
+            <span class="kt">int</span> <span class="n">k</span> <span class="o">=</span> <span class="n">1</span><span class="o">;</span>
+            <span class="kt">long</span> <span class="n">product</span> <span class="o">=</span> <span class="o">(</span><span class="kt">long</span><span class="o">)</span><span class="n">i</span> <span class="o">*</span> <span class="n">k</span><span class="o">;</span>
+            <span class="k">while</span><span class="o">(</span><span class="n">product</span> <span class="o">&lt;</span> <span class="n">multi</span><span class="o">.</span><span class="na">length</span><span class="o">){</span>
+                <span class="c1">//we increase the number of multiples
+</span><span class="c1"></span>                <span class="c1">//by the number of factors in the input 
+</span><span class="c1"></span>                <span class="c1">//array
+</span><span class="c1"></span>                <span class="n">multi</span><span class="o">[</span><span class="n">k</span> <span class="o">*</span> <span class="n">i</span><span class="o">]</span> <span class="o">+=</span> <span class="n">factors</span><span class="o">[</span><span class="n">i</span><span class="o">];</span>
+                <span class="n">k</span><span class="o">++;</span>
+                <span class="n">product</span> <span class="o">=</span> <span class="o">(</span><span class="kt">long</span><span class="o">)</span><span class="n">i</span> <span class="o">*</span> <span class="n">k</span><span class="o">;</span>
+            <span class="o">}</span>
+        <span class="o">}</span>
+        <span class="c1">//for each input element the number of non divisors
+</span><span class="c1"></span>        <span class="c1">//is the difference of the total number of elements
+</span><span class="c1"></span>        <span class="c1">//and the number of times that element appears as a
+</span><span class="c1"></span>        <span class="c1">//multiple of other input elements
+</span><span class="c1"></span>        <span class="kt">int</span> <span class="n">result</span><span class="o">[]</span> <span class="o">=</span> <span class="k">new</span> <span class="kt">int</span><span class="o">[</span><span class="n">A</span><span class="o">.</span><span class="na">length</span><span class="o">];</span>
+        <span class="k">for</span> <span class="o">(</span><span class="kt">int</span> <span class="n">i</span> <span class="o">=</span> <span class="n">0</span><span class="o">;</span><span class="n">i</span> <span class="o">&lt;</span> <span class="n">A</span><span class="o">.</span><span class="na">length</span><span class="o">;</span> <span class="n">i</span><span class="o">++){</span>
+            <span class="n">result</span><span class="o">[</span><span class="n">i</span><span class="o">]</span> <span class="o">=</span> <span class="n">A</span><span class="o">.</span><span class="na">length</span> <span class="o">-</span> <span class="n">multi</span><span class="o">[</span><span class="n">A</span><span class="o">[</span><span class="n">i</span><span class="o">]];</span>
+        <span class="o">}</span>
+        <span class="k">return</span> <span class="n">result</span><span class="o">;</span>
+    <span class="o">}</span>
+<span class="o">}</span>
+</code></pre></div><p>Any suggestion is more than welcome! Happy coding!!!</p>
+<p>ap</p>
 
 
 <footer>

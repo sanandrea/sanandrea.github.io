@@ -82,10 +82,10 @@ It begins with the necessity of one my managers to invite me for a two week peri
 </ul>
 <h3 id="tricky-part">Tricky part</h3>
 <p>The sqlite guide is clear: if you need a x64 binary on windows it is recommended to use Visual Studio (for 32 bit MinGW is also valid). Now comes the tricky part for me, because I had to compile the dll under Visual Studio 2010. I read that I had to open the Visual Studio command prompt from the tools menu. The command prompt loads the environement variables for Visual Studio compiler, by default x86. So one should go at C:\Program Files (x86)\Microsoft Visual Studio\10.0\VC folder and load environment variables for x64 architecture with the following command:</p>
-<pre><code>vsvarsall.bat amd64
-</code></pre><p>Now the compiling toolchain is ready. I am ready to install except a small detail. I need the .lib file for my C++ project on Visual Studio, the dll is not enough. To do this there is needed a file (.def extension) on which are listed the module statements that describe various attributes of the dll. I took the latest .def file from the latest precompiled binaries of sqlite for windows. Finally the command to compile is:</p>
-<pre><code>cl sqlite3.c -link -dll -out:sqlite3.dll /MACHINE:x64 /def:sqlite3.def
-</code></pre><p>Given the fact that the def file was for a newer version of sqlite the linker complained for some missing symbols. I removed those symbols from the sqlite3.def file and it compiled correctly the dll file and also produced .lib and .exp files.</p>
+<div class="highlight"><pre class="chroma"><code class="language-powershell" data-lang="powershell"><span class="n">vsvarsall</span><span class="p">.</span><span class="n">bat</span> <span class="n">amd64</span>
+</code></pre></div><p>Now the compiling toolchain is ready. I am ready to install except a small detail. I need the .lib file for my C++ project on Visual Studio, the dll is not enough. To do this there is needed a file (.def extension) on which are listed the module statements that describe various attributes of the dll. I took the latest .def file from the latest precompiled binaries of sqlite for windows. Finally the command to compile is:</p>
+<div class="highlight"><pre class="chroma"><code class="language-powershell" data-lang="powershell"><span class="n">cl</span> <span class="n">sqlite3</span><span class="p">.</span><span class="n">c</span> <span class="n">-link</span> <span class="n">-dll</span> <span class="n">-out</span><span class="err">:</span><span class="n">sqlite3</span><span class="p">.</span><span class="n">dll</span> <span class="p">/</span><span class="n">MACHINE</span><span class="err">:</span><span class="n">x64</span> <span class="p">/</span><span class="n">def</span><span class="err">:</span><span class="n">sqlite3</span><span class="p">.</span><span class="n">def</span>
+</code></pre></div><p>Given the fact that the def file was for a newer version of sqlite the linker complained for some missing symbols. I removed those symbols from the sqlite3.def file and it compiled correctly the dll file and also produced .lib and .exp files.</p>
 <p>Finally I have sqlite 3.8.10.2 on windows, and it does not present the problem of empty columns. I was pretty calmed at the moment because I had a fully working sqlite db and a tool to migrate MS Access files automatically in the future.</p>
 <p>In the meantime I posted the empty column issue into in the sqlite mailing list. And a kind developer at sqlite pointed out the problem:</p>
 <blockquote>
@@ -103,12 +103,13 @@ forward.</p>
 </blockquote>
 <h3 id="my-contribution">My contribution</h3>
 <p>So I had to change only one line at the project</p>
-<pre><code>public static String EscapeIdentifier(String identifier){return &quot;'&quot; + identifier.Replace(&quot;'&quot;, &quot;''&quot;) + &quot;'&quot;;}
-</code></pre><p>into</p>
-<pre><code>public static String EscapeIdentifier(String identifier){return &quot;&quot;&quot; + identifier.Replace(&quot;&quot;&quot;, &quot;&quot;&quot;&quot;) + &quot;&quot;&quot;;}
-</code></pre><p>and everything was ok.</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">static</span> <span class="n">String</span> <span class="n">EscapeIdentifier</span><span class="p">(</span><span class="n">String</span> <span class="n">identifier</span><span class="p">){</span><span class="k">return</span> <span class="s">&#34;&#39;&#34;</span> <span class="p">+</span> <span class="n">identifier</span><span class="p">.</span><span class="n">Replace</span><span class="p">(</span><span class="s">&#34;&#39;&#34;</span><span class="p">,</span> <span class="s">&#34;&#39;&#39;&#34;</span><span class="p">)</span> <span class="p">+</span> <span class="s">&#34;&#39;&#34;</span><span class="p">;}</span>
+</code></pre></div><p>into</p>
+<div class="highlight"><pre class="chroma"><code class="language-csharp" data-lang="csharp"><span class="k">public</span> <span class="k">static</span> <span class="n">String</span> <span class="n">EscapeIdentifier</span><span class="p">(</span><span class="n">String</span> <span class="n">identifier</span><span class="p">){</span><span class="k">return</span> <span class="s">&#34;&#34;&#34; + identifier.Replace(&#34;&#34;&#34;</span><span class="p">,</span> <span class="s">&#34;&#34;&#34;&#34;</span><span class="p">)</span> <span class="p">+</span> <span class="s">&#34;&#34;&#34;;}
+</span></code></pre></div><p>and everything was ok.</p>
 <p>This was part of my journey on the migration of the database of our client. Glad to have a happy ending and hope that this information would help someone else.</p>
-<p>apwelcome! Happy coding!!!</p>
+<p>Happy coding!!!</p>
+<p>ap</p>
 
 
 <footer>
