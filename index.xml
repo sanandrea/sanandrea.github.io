@@ -4,66 +4,51 @@
     <title>Andi Palo personal website</title>
     <link>https://andipalo.com/</link>
     <description>Recent content on Andi Palo personal website</description>
-    <generator>Hugo -- gohugo.io</generator>
+    <generator>Hugo</generator>
     <language>en-us</language>
-    <lastBuildDate>Sun, 11 Jun 2023 23:52:40 +0100</lastBuildDate><atom:link href="https://andipalo.com/index.xml" rel="self" type="application/rss+xml" />
+    <lastBuildDate>Sun, 11 Jun 2023 23:52:40 +0100</lastBuildDate>
+    <atom:link href="https://andipalo.com/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>Posterior Tibial Pain</title>
       <link>https://andipalo.com/posts/posterior-tibial-pain/</link>
       <pubDate>Sun, 11 Jun 2023 23:52:40 +0100</pubDate>
-      
       <guid>https://andipalo.com/posts/posterior-tibial-pain/</guid>
       <description>Intro This blogpost captures my experience to overcome the Posterior Tibial Tendon pain. I am not by any means a qualified person to share medical advice. I have built only a theory for the root cause in my specific case for this pain and what I ended up doing in order to overcome it. The Posterior Tibial tendon pain is quite common in novice to intermediate experienced runners. The pain comes gradually and is quite uncomfortable and prevents runners from continuing their training plans hindering the dreams of reaching their goals.</description>
     </item>
-    
     <item>
       <title>Gjëagjëza</title>
       <link>https://andipalo.com/posts/gjeagjeza/</link>
       <pubDate>Fri, 09 Jun 2023 20:04:54 +0100</pubDate>
-      
       <guid>https://andipalo.com/posts/gjeagjeza/</guid>
-      <description>English: Small list of riddles told by my grandparents that mostly belong to my home country region.
- Më poshtë kam mbledhur disa gjëagjëza që gjyshja dhe gjyshi im më kanë treguar kur kam qenë i vogël. Pasi i kemi kujtuar në familje për fëmijët e mij, vendosa ti përmbledh ne ky post për ti ndarë me shqiptarë të tjerë brenda e jashtë Shqipërisë. Shumë prej tyre nuk munda ti gjej dot online ndaj vendosa ti ndaj me ju lexues.</description>
+      <description>English: Small list of riddles told by my grandparents that mostly belong to my home country region.&#xA;Më poshtë kam mbledhur disa gjëagjëza që gjyshja dhe gjyshi im më kanë treguar kur kam qenë i vogël. Pasi i kemi kujtuar në familje për fëmijët e mij, vendosa ti përmbledh ne ky post për ti ndarë me shqiptarë të tjerë brenda e jashtë Shqipërisë. Shumë prej tyre nuk munda ti gjej dot online ndaj vendosa ti ndaj me ju lexues.</description>
     </item>
-    
     <item>
       <title>Sourdough Journey</title>
       <link>https://andipalo.com/posts/sourdough-bread/</link>
       <pubDate>Fri, 07 May 2021 23:52:43 +0000</pubDate>
-      
       <guid>https://andipalo.com/posts/sourdough-bread/</guid>
       <description>During the first pandemic of the third millenium me too joined the sourdough baking bandwagon. In the contrary of other blog posts especially at r/Sourdough or [r/Breadit](https://www.reddit.com/r/Sourdough/ or https://www.reddit.com/r/Breadit/) I am not going to post my first sourdough bread, instead I am going to post the last one a sort of mic drop 🎤. I am going to explain at the end of this post the reason I am stopping.</description>
     </item>
-    
     <item>
       <title>Xamarin: Binding Java Libraries to C#</title>
       <link>https://andipalo.com/posts/xamarin-bindings-java-seesharp/</link>
       <pubDate>Sun, 16 Jul 2017 15:39:19 +0000</pubDate>
-      
       <guid>https://andipalo.com/posts/xamarin-bindings-java-seesharp/</guid>
-      <description>It has been exactly one year that I have been involved mobile application development with Xamarin and I would like to share an important experience that I have gained in this period. Xamarin is a powerful framework for cross-platform mobile application development which uses a modern and powerful language like C# but in the same time it offers access to the native Platform APIs and User Interface controls.
-Another key aspect of Xamarin Framework is the ability to use native libraries (native is a relative term and in the Xamarin world it means developed in Java or Obj-C/Swift).</description>
+      <description>It has been exactly one year that I have been involved mobile application development with Xamarin and I would like to share an important experience that I have gained in this period. Xamarin is a powerful framework for cross-platform mobile application development which uses a modern and powerful language like C# but in the same time it offers access to the native Platform APIs and User Interface controls.&#xA;Another key aspect of Xamarin Framework is the ability to use native libraries (native is a relative term and in the Xamarin world it means developed in Java or Obj-C/Swift).</description>
     </item>
-    
     <item>
       <title>Codility &amp; Intercom</title>
       <link>https://andipalo.com/posts/codility/</link>
       <pubDate>Sun, 29 May 2016 19:49:46 +0000</pubDate>
-      
       <guid>https://andipalo.com/posts/codility/</guid>
-      <description>Last months have been trying to seek a career change. Among different job interviews and screenings I got to know also Intercom. It left an awesome and bitter experience. I did manage to go to the on-site interview but I did not get an offer (sigh)… but that story would belong to another post.
-I spent three days in Dublin and had a chance to make a second visit to the city.</description>
+      <description>Last months have been trying to seek a career change. Among different job interviews and screenings I got to know also Intercom. It left an awesome and bitter experience. I did manage to go to the on-site interview but I did not get an offer (sigh)… but that story would belong to another post.&#xA;I spent three days in Dublin and had a chance to make a second visit to the city.</description>
     </item>
-    
     <item>
       <title>DB Amalgamation</title>
       <link>https://andipalo.com/posts/db-amalgamation/</link>
       <pubDate>Thu, 24 Dec 2015 10:47:43 +0000</pubDate>
-      
       <guid>https://andipalo.com/posts/db-amalgamation/</guid>
-      <description>I have always wanted to keep a blog but have always failed to create one, because of the lack of creativity and storytelling (as you will find out on this post). But in the recent two weeks I had an interesting work experience (and also funny) that I would like to share.
-It begins with the necessity of one my managers to invite me for a two week period in the Italy office of the company.</description>
+      <description>I have always wanted to keep a blog but have always failed to create one, because of the lack of creativity and storytelling (as you will find out on this post). But in the recent two weeks I had an interesting work experience (and also funny) that I would like to share.&#xA;It begins with the necessity of one my managers to invite me for a two week period in the Italy office of the company.</description>
     </item>
-    
   </channel>
 </rss>
